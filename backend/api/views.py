@@ -1,15 +1,18 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
-from .models import Transaction
+from models import *
 import json
+from .fetch_data import *
+
 
 # List or Create Transactions
 @csrf_exempt
 @login_required
 def transaction_list(request):
     if request.method == 'GET':
-        transactions = Transaction.objects.filter(user=request.user).values()
+        transactions = Transaction.objects.filter
+        (user=request.user).values()
         return JsonResponse(list(transactions), safe=False)
     
     elif request.method == 'POST':
@@ -24,6 +27,12 @@ def transaction_list(request):
             return JsonResponse({"message": "Transaction created successfully", "transaction_id": transaction.id}, status=201)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
+
+from django.http import JsonResponse
+
+def fetch_data(request):
+    fetch_stock_data('AAPL')  # You can change the symbol as needed
+    return JsonResponse({'status': 'Data fetched successfully!'})
 
 # Retrieve, Update or Delete a Transaction
 @csrf_exempt
@@ -57,3 +66,19 @@ def transaction_detail(request, transaction_id):
     elif request.method == 'DELETE':
         transaction.delete()
         return JsonResponse({"message": "Transaction deleted successfully"})
+
+def store_data(symbol, timestamp, close_price):
+    try:
+        StockData.objects.create(
+            symbol=symbol,
+            timestamp=timestamp,
+            close_price=close_price
+        )
+        print("Data stored successfully.")
+    except Exception as e:
+        print(f"Error storing data: {e}")
+    
+def fetch_transaction_view(request):
+    access_token = "your_sandbox_access_token"  # Replace with actual token
+    result = fetch_transaction_data(access_token)
+    return JsonResponse({"message": result})

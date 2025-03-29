@@ -18,3 +18,13 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.category}: {self.amount}"
+class StockData(models.Model):
+    symbol = models.CharField(max_length=10)
+    timestamp = models.DateTimeField()
+    close_price = models.FloatField()
+
+    def __str__(self):
+        return f"{self.symbol} - {self.close_price} at {self.timestamp}"
+    
+
+
