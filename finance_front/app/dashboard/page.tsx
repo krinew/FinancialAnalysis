@@ -115,7 +115,6 @@ export default function Dashboard() {
   // Example: Store dummy stock data
   const handleStoreStockData = async () => {
     try {
-      // Dummy values for the example
       const symbol = "AAPL"
       const timestamp = new Date().toISOString()
       const closePrice = 150.25

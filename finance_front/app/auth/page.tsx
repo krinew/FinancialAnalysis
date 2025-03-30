@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PiggyBank } from "lucide-react"
 import Link from "next/link"
 
-export default function AuthPage() {
+export default function Auth() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState("login")
@@ -21,15 +21,13 @@ export default function AuthPage() {
     }
   }, [searchParams])
 
-  const handleLogin = (e) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
-    // In a real app, handle authentication here
     router.push("/dashboard")
   }
 
-  const handleSignup = (e) => {
+  const handleSignup = (e: React.FormEvent) => {
     e.preventDefault()
-    // In a real app, handle registration here
     router.push("/dashboard")
   }
 
@@ -43,7 +41,7 @@ export default function AuthPage() {
       <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
         <Card>
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl">Welcome back</CardTitle>
+            <CardTitle className="text-2xl">Welcome</CardTitle>
             <CardDescription>Enter your credentials to access your account</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
@@ -120,22 +118,8 @@ export default function AuthPage() {
               </TabsContent>
             </Tabs>
           </CardContent>
-          <CardFooter className="flex flex-col">
-            <div className="mt-4 text-center text-sm text-muted-foreground">
-              By continuing, you agree to our{" "}
-              <Link href="#" className="underline underline-offset-4 hover:text-primary">
-                Terms of Service
-              </Link>{" "}
-              and{" "}
-              <Link href="#" className="underline underline-offset-4 hover:text-primary">
-                Privacy Policy
-              </Link>
-              .
-            </div>
-          </CardFooter>
         </Card>
       </div>
     </div>
   )
 }
-
