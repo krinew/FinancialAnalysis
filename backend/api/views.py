@@ -8,7 +8,8 @@ from plaid.model.accounts_get_request import AccountsGetRequest
 from plaid.model.transactions_get_request import TransactionsGetRequest
 from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
 from plaid.model.products import Products # <--- IMPORT ADDED
-
+import pathway as pw
+from .pathway_pipeline import run_pipeline
 from datetime import datetime, timedelta
 
 access_token = "access-sandbox-d5d206b2-da0a-488c-845d-c27482e55dc9"  # Replace with actual sandbox token
@@ -172,23 +173,46 @@ def create_sandbox_token(request):
 @csrf_exempt
 def fetch_transaction_view(request):
     try:
-        # Use hardcoded access token
-        
         client = get_plaid_client()
         end_date = datetime.now().date()
         start_date = end_date - timedelta(days=30)
 
+        # Request transactions from Plaid
         request_data = TransactionsGetRequest(
-            access_token=access_token,
+            access_token="your_access_token",  # Replace with actual token
             start_date=start_date,
             end_date=end_date
         )
-
+       
         response = client.transactions_get(request_data)
-        return JsonResponse(response.to_dict(), safe=False)
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+        transaction_data = response.to_dict().get('transactions', [])
 
+        # Validate data
+        if not transaction_data:
+            return JsonResponse({"error": "No transactions found."}, status=404)
+
+        # Transform data to match Pathway schema
+        formatted_data = [
+            {
+                "transaction_id": txn.get("transaction_id"),
+                "user_id": txn.get("account_id"),  # Assuming account_id represents the user
+                "amount": txn.get("amount"),
+                "category": txn.get("category", ["Unknown"])[0],
+                "description": txn.get("name"),
+                "timestamp": txn.get("date"),
+                "pending": txn.get("pending", False),
+            }
+            for txn in transaction_data
+        ]
+
+        # Send data to Pathway for real-time processing
+        run_pipeline(formatted_data)
+
+        return JsonResponse({"message": "Data sent to Pathway for processing."}, status=200)
+
+    except Exception as e:
+        logger.error(f"Error in fetch_transaction_view: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
     
 
 # @login_required

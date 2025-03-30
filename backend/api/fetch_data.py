@@ -318,3 +318,128 @@ def fetch_and_store_transactions(item: Item, days: int = 30):
     except Exception as e:
         logger.exception(f"Unexpected error fetching transactions for item {item.item_id} (User: {user.username})")
         return f"Failed: Unexpected error: Check logs."
+    
+    
+    
+def store_transaction_data(response_data):
+    try:
+        # Process Accounts
+        accounts_data = response_data.get('accounts', [])
+        accounts_map = {}
+        for acc in accounts_data:
+            account, _ = Account.objects.update_or_create(
+                account_id=acc['account_id'],
+                defaults={
+                    'name': acc.get('name', 'Unknown'),
+                    'account_type': acc.get('type', 'Unknown'),
+                    'account_subtype': acc.get('subtype', 'Unknown'),
+                    'currency_code': acc.get('balances', {}).get('iso_currency_code', 'USD'),
+                    'balance_available': acc.get('balances', {}).get('available', 0),
+                    'balance_current': acc.get('balances', {}).get('current', 0),
+                }
+            )
+            accounts_map[acc['account_id']] = account
+        
+        # Process Transactions
+        transactions_data = response_data.get('transactions', [])
+        for txn in transactions_data:
+            account_instance = accounts_map.get(txn['account_id'])
+            if not account_instance:
+                logger.warning(f"No matching account for transaction {txn['transaction_id']}")
+                continue
+
+            Transaction.objects.update_or_create(
+                transaction_id=txn['transaction_id'],
+                account=account_instance,
+                defaults={
+                    'name': txn.get('name', 'Unknown'),
+                    'amount': Decimal(str(txn['amount'])),
+                    'currency_code': txn.get('iso_currency_code', 'USD'),
+                    'category': ', '.join(txn.get('category', ['Unknown'])),
+                    'date': txn['date'],
+                    'pending': txn.get('pending', False),
+                }
+            )
+        return f"Stored {len(transactions_data)} transactions and {len(accounts_data)} accounts."
+    except Exception as e:
+        logger.error(f"Error storing data: {e}", exc_info=True)
+        return str(e)
+    
+    
+    
+    
+def store_plaid_data(item: Item, response_data):
+    try:
+        # ===> Store Accounts <===
+        accounts_data = response_data.get('accounts', [])
+        accounts_map = {}
+        
+        for acc in accounts_data:
+            account, _ = Account.objects.update_or_create(
+                account_id=acc['account_id'],
+                user=item.user,
+                defaults={
+                    'name': acc.get('name', 'Unknown'),
+                    'official_name': acc.get('official_name'),
+                    'type': acc.get('type', ''),
+                    'subtype': acc.get('subtype', ''),
+                    'available_balance': acc.get('balances', {}).get('available', 0),
+                    'current_balance': acc.get('balances', {}).get('current', 0),
+                    'currency_code': acc.get('balances', {}).get('iso_currency_code', 'USD'),
+                    'mask': acc.get('mask', ''),
+                }
+            )
+            accounts_map[acc['account_id']] = account
+        
+        logger.info(f"Stored {len(accounts_data)} accounts for user {item.user.username}")
+
+        # ===> Store Transactions <===
+        transactions_data = response_data.get('transactions', [])
+        count_created = 0
+        count_updated = 0
+        
+        for txn in transactions_data:
+            account_instance = accounts_map.get(txn['account_id'])
+            if not account_instance:
+                logger.warning(f"Transaction {txn['transaction_id']} has no matching account.")
+                continue
+
+            # Classify category
+            category_type = classify_transaction_category(txn.get('category', ['Unknown']))
+
+            obj, created = Transaction.objects.update_or_create(
+                transaction_id=txn['transaction_id'],
+                user=item.user,
+                account=account_instance,
+                defaults={
+                    'amount': Decimal(str(txn.get('amount', 0))),
+                    'currency_code': txn.get('iso_currency_code', 'USD'),
+                    'category': category_type,
+                    'description': txn.get('name', ''),
+                    'pending': txn.get('pending', False),
+                }
+            )
+            if created:
+                count_created += 1
+            else:
+                count_updated += 1
+        
+        logger.info(f"Stored {count_created} new transactions and updated {count_updated} existing transactions.")
+        return {"accounts_created": len(accounts_data), "transactions_created": count_created, "transactions_updated": count_updated}
+
+    except Exception as e:
+        logger.error(f"Error storing data: {e}", exc_info=True)
+        return {"error": str(e)}
+
+def classify_transaction_category(categories):
+    if not categories:
+        return 'expense'
+    category_lower = categories[0].lower()
+    if 'income' in category_lower:
+        return 'income'
+    elif 'loan' in category_lower or 'debt' in category_lower:
+        return 'debt'
+    elif 'investment' in category_lower:
+        return 'investment'
+    else:
+        return 'expense'
