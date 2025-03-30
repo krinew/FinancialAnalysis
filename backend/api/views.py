@@ -1,18 +1,35 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
-from models import *
+from .models import *
 import json
 from .fetch_data import *
+from plaid.model.accounts_get_request import AccountsGetRequest
+from plaid.model.transactions_get_request import TransactionsGetRequest
+from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
+from plaid.model.products import Products # <--- IMPORT ADDED
+
+from datetime import datetime, timedelta
+
+access_token = "access-sandbox-d5d206b2-da0a-488c-845d-c27482e55dc9"  # Replace with actual sandbox token
 
 
 # List or Create Transactions
-@csrf_exempt
+configuration = plaid.Configuration(
+    host=plaid.Environment.Sandbox,
+    api_key={
+        'clientId':"67e82554f2516500245da664" ,
+        'secret': "c524cf189dcbfef4790581719a45a7"
+    }
+)
+api_client = plaid.ApiClient(configuration)
+client = plaid_api.PlaidApi(api_client)
+
+
 @login_required
 def transaction_list(request):
     if request.method == 'GET':
-        transactions = Transaction.objects.filter
-        (user=request.user).values()
+        transactions = Transaction.objects.filter(user=request.user).values()
         return JsonResponse(list(transactions), safe=False)
     
     elif request.method == 'POST':
@@ -28,14 +45,19 @@ def transaction_list(request):
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
 
-from django.http import JsonResponse
-
-def fetch_data(request):
-    fetch_stock_data('AAPL')  # You can change the symbol as needed
-    return JsonResponse({'status': 'Data fetched successfully!'})
+# # Fetch Stock Data using fetch_stock_data
+# @csrf_exempt
+# @login_required
+# def fetch_data(request):
+#     symbol = request.GET.get('symbol', 'AAPL')
+#     try:
+#         fetch_stock_data(symbol)
+#         return JsonResponse({'status': f'Data fetched successfully for {symbol}!'}, status=200)
+#     except Exception as e:
+#         return JsonResponse({'error': str(e)}, status=500)
 
 # Retrieve, Update or Delete a Transaction
-@csrf_exempt
+
 @login_required
 def transaction_detail(request, transaction_id):
     try:
@@ -67,18 +89,172 @@ def transaction_detail(request, transaction_id):
         transaction.delete()
         return JsonResponse({"message": "Transaction deleted successfully"})
 
-def store_data(symbol, timestamp, close_price):
-    try:
-        StockData.objects.create(
-            symbol=symbol,
-            timestamp=timestamp,
-            close_price=close_price
-        )
-        print("Data stored successfully.")
-    except Exception as e:
-        print(f"Error storing data: {e}")
-    
+
+@csrf_exempt
 def fetch_transaction_view(request):
-    access_token = "your_sandbox_access_token"  # Replace with actual token
-    result = fetch_transaction_data(access_token)
-    return JsonResponse({"message": result})
+    try:
+        # Provide a generic access_token (not tied to a specific user)
+        result = fetch_and_store_transactions(access_token)
+        return JsonResponse({"message": result})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
+    
+@csrf_exempt
+def exchange_token(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            public_token = access_token
+
+            if not public_token:
+                return JsonResponse({"error": "Missing public_token"}, status=400)
+
+            client = get_plaid_client()
+            exchange_request = ItemPublicTokenExchangeRequest(public_token=public_token)
+            exchange_response = client.item_public_token_exchange(exchange_request)
+
+            access_token = exchange_response.access_token
+            item_id = exchange_response.item_id
+
+            # Save in the database
+            item = Item.objects.create(
+                user=request.user,
+                access_token=access_token,
+                item_id=item_id,
+            )
+
+            return JsonResponse({"message": "Access token saved successfully!"})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+@csrf_exempt
+def create_sandbox_token(request):
+    try:
+        client = get_plaid_client()
+
+        # Step 1: Create a public token
+        request_data = SandboxPublicTokenCreateRequest(
+            institution_id="ins_109508",
+            initial_products=[
+                Products('transactions'),
+                Products('auth'),
+                Products('balance')
+            ]
+        )
+        response = client.sandbox_public_token_create(request_data)
+        public_token = response.public_token
+
+        # Step 2: Exchange public token for access token
+        exchange_request = ItemPublicTokenExchangeRequest(public_token=public_token)
+        exchange_response = client.item_public_token_exchange(exchange_request)
+
+        access_token = exchange_response.access_token
+        item_id = exchange_response.item_id
+
+        return JsonResponse({'public_token': public_token, 'access_token': access_token, 'item_id': item_id})
+    
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+# @login_required
+# def fetch_accounts(request):
+#     try:
+#         item = Item.objects.filter(user=request.user).first()
+#         if not item:
+#             return JsonResponse({"error": "No item found for this user"}, status=404)
+
+#         client = get_plaid_client()
+#         request = AccountsGetRequest(access_token=item.access_token)
+#         response = client.accounts_get(request)
+#         return JsonResponse(response.to_dict(), safe=False)
+#     except Exception as e:
+#         return JsonResponse({"error": str(e)}, status=500)
+    
+@csrf_exempt
+def fetch_transaction_view(request):
+    try:
+        # Use hardcoded access token
+        
+        client = get_plaid_client()
+        end_date = datetime.now().date()
+        start_date = end_date - timedelta(days=30)
+
+        request_data = TransactionsGetRequest(
+            access_token=access_token,
+            start_date=start_date,
+            end_date=end_date
+        )
+
+        response = client.transactions_get(request_data)
+        return JsonResponse(response.to_dict(), safe=False)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+    
+
+# @login_required
+# def fetch_transactions(request):
+#     try:
+#         item = Item.objects.filter(user=request.user).first()
+#         if not item:
+#             return JsonResponse({"error": "No item found for this user"}, status=404)
+
+#         client = get_plaid_client()
+
+#         start_date = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+#         end_date = datetime.now().strftime('%Y-%m-%d')
+
+#         request_data = TransactionsGetRequest(
+#             access_token=item.access_token,
+#             start_date=start_date,
+#             end_date=end_date
+#         )
+#         response = client.transactions_get(request_data)
+#         return JsonResponse(response.to_dict(), safe=False)
+#     except Exception as e:
+#         return JsonResponse({"error": str(e)}, status=500)
+
+@csrf_exempt
+def fetch_accounts_without_user(request):
+    try:
+        access_token = "sandbox-access-token"  # Hardcoded for testing
+        request_data = AccountsGetRequest(access_token=access_token)
+        response = client.accounts_get(request_data)
+        return JsonResponse(response.to_dict(), safe=False)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+def create_sandbox_token_view(request):
+    try:
+        # Configure Plaid Client
+        configuration = plaid.Configuration(
+            host=plaid.Environment.Sandbox,
+            api_key={
+                'clientId': "67e82554f2516500245da664",
+                'secret': "c524cf189dcbfef4790581719a45a7",
+            }
+        )
+        api_client = plaid.ApiClient(configuration)
+        client = plaid_api.PlaidApi(api_client)
+
+        # Step 1: Create a public token
+        request_data = SandboxPublicTokenCreateRequest(
+            institution_id="ins_109508",  # Plaid's Test Bank
+             initial_products=[
+        Products('transactions'),
+        Products('auth'),
+    ]
+        )
+        response = client.sandbox_public_token_create(request_data)
+        public_token = response.public_token
+
+        # Step 2: Exchange public token for access token
+        exchange_request = ItemPublicTokenExchangeRequest(public_token=public_token)
+        exchange_response = client.item_public_token_exchange(exchange_request)
+        access_token = exchange_response.access_token
+
+        return JsonResponse({'public_token': public_token, 'access_token': access_token})
+    
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
