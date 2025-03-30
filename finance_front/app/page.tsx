@@ -6,20 +6,20 @@ import Link from "next/link"
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-10 px-6 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between py-4">
           <Link href="/" className="flex items-center gap-2 font-semibold">
             <PiggyBank className="h-6 w-6" />
-            <span>FinanceTrack</span>
+            <span>MicroFinance</span>
           </Link>
-          <div className="flex items-center gap-4">
+          {/* <div className="flex items-center gap-4">
             <Link href="/auth">
               <Button variant="outline">Login</Button>
             </Link>
             <Link href="/auth?signup=true">
               <Button>Sign Up</Button>
             </Link>
-          </div>
+          </div> */}
         </div>
       </header>
 
@@ -38,7 +38,7 @@ export default function Home() {
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  <Link href="/auth?signup=true">
+                  <Link href="/dashboard">
                     <Button size="lg" className="w-full min-[400px]:w-auto">
                       Get Started
                       <ChevronRight className="ml-2 h-4 w-4" />
@@ -177,9 +177,9 @@ export default function Home() {
               </p>
             </div>
             <div className="mx-auto flex flex-col gap-2 min-[400px]:flex-row justify-center pt-4">
-              <Link href="/auth?signup=true">
+              <Link href="/dashboard">
                 <Button size="lg" className="w-full min-[400px]:w-auto">
-                  Create Free Account
+                  Get Started
                 </Button>
               </Link>
             </div>
@@ -187,25 +187,13 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t py-6 md:py-0">
+      <footer className="border-t py-6 px-6 md:py-0">
         <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
           <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
             &copy; {new Date().getFullYear()} FinanceTrack. All rights reserved.
           </p>
-          <div className="flex items-center gap-4">
-            <Link href="#" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
-              Terms
-            </Link>
-            <Link href="#" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
-              Privacy
-            </Link>
-            <Link href="#" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
-              Contact
-            </Link>
-          </div>
         </div>
       </footer>
     </div>
   )
 }
-

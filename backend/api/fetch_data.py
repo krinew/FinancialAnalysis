@@ -1,24 +1,21 @@
-# Assuming this is in e.g., your_app/services.py or your_app/plaid_utils.py
 import plaid
 from plaid.api import plaid_api
 from plaid.model.transactions_get_request import TransactionsGetRequest
 from plaid.model.transactions_get_request_options import TransactionsGetRequestOptions
 from plaid.model.accounts_get_request import AccountsGetRequest
 from plaid.model.sandbox_public_token_create_request import SandboxPublicTokenCreateRequest
-# Import other necessary Plaid models for token exchange, etc.
+
 from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
 from django.contrib.auth.models import User
-# Adjust the import path based on your Django app structure
-# Use the models you provided in models.py
-from .models import Item, Account, Transaction
-from .config import PLAID_CLIENT_ID, PLAID_SECRET, PLAID_ENV # Ensure config is accessible
-from datetime import datetime, timedelta, date
-from decimal import Decimal # Use Decimal for financial values
-import logging
-from django.utils import timezone # For timezone-aware datetimes
-# --- Logging Setup (Configure in Django Settings) ---
-logger = logging.getLogger(__name__)
 
+from .models import Item, Account, Transaction
+from .config import PLAID_CLIENT_ID, PLAID_SECRET, PLAID_ENV 
+from datetime import datetime, timedelta, date
+from decimal import Decimal
+import logging
+from django.utils import timezone 
+
+logger = logging.getLogger(__name__)
 
 def generate_sandbox_token(user):
     client = get_plaid_client()

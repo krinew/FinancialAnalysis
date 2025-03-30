@@ -1,27 +1,96 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LogOut, PiggyBank, Plus, DollarSign, TrendingDown, TrendingUp, Home, BarChart3, Settings } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
+import {
+  LogOut,
+  PiggyBank,
+  DollarSign,
+  TrendingDown,
+  TrendingUp,
+  BarChart3,
+  LineChart
+} from "lucide-react"
+
+// Import API functions
+import { fetchTransactions } from "../../lib/api"
+
 import TransactionForm from "@/components/transaction-form"
 import AIAdvisor from "@/components/ai-advisor"
 
 export default function Dashboard() {
   const router = useRouter()
   const [transactionType, setTransactionType] = useState("expense")
+  const [transactions, setTransactions] = useState<any[]>([])
+  const [message, setMessage] = useState<string>("")
+
+  // Fetch transactions on mount
+  useEffect(() => {
+    refreshTransactions()
+  }, [])
+
+  const refreshTransactions = async () => {
+    try {
+      const data = await fetchTransactions()
+      
+      const mappedTransactions = data.transactions.map((t: any) => ({
+        id: t.transaction_id,
+        account_id: t.account_id,
+        name: t.name,
+        amount: t.amount,
+        date: t.date,
+        category: t.category?.join(" > "),
+        payment_channel: t.payment_channel,
+        currency: t.iso_currency_code,
+      }))
+      
+  
+      setTransactions(mappedTransactions)
+    } catch (error: any) {
+      setMessage("Error fetching transactions: " + error.message)
+    }
+  }
 
   const handleLogout = () => {
-    // Handle logout logic
     router.push("/")
   }
 
+  const categoryTotals: Record<string, number> = {}
+    transactions.filter(t => t.amount < 0).forEach(t => {
+      categoryTotals[t.category] = (categoryTotals[t.category] || 0) + Math.abs(t.amount)
+    })
+  const topSpendingCategory = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0]?.[0] || "None"
+
+
+  const income = transactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0)
+  const expenses = transactions.filter(t => t.amount < 0).reduce((sum, t) => sum + t.amount, 0) * -1
+  const totalBalance = income - expenses
+  const investments = transactions.filter(t => t.category === "Investments").reduce((sum, t) => sum + t.amount, 0)
+  const savingsRate = income > 0 ? ((totalBalance / income) * 100).toFixed(2) : "0"
+
+
+  // Identify the biggest expense
+const biggestExpense = transactions.filter(t => t.amount < 0).reduce((max, t) => (t.amount < max.amount ? t : max), { amount: 0, name: "None" });
+
+// Get this month's and last month's expenses
+const currentMonth = new Date().getMonth()
+const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1
+
+const currentMonthExpenses = transactions.filter(t => new Date(t.date).getMonth() === currentMonth && t.amount < 0)
+const lastMonthExpenses = transactions.filter(t => new Date(t.date).getMonth() === lastMonth && t.amount < 0)
+
+const currentTotal = currentMonthExpenses.reduce((sum, t) => sum + Math.abs(t.amount), 0)
+const lastTotal = lastMonthExpenses.reduce((sum, t) => sum + Math.abs(t.amount), 0)
+
+const spendingTrend = lastTotal > 0 ? ((currentTotal - lastTotal) / lastTotal) * 100 : 0
+
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-10 px-6 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between py-4">
           <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
             <PiggyBank className="h-6 w-6" />
@@ -36,46 +105,21 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="container flex-1 items-start md:grid md:grid-cols-[220px_1fr] lg:grid-cols-[240px_1fr] md:gap-6 lg:gap-10 mt-6">
-        <aside className="fixed top-16 z-30 -ml-2 hidden h-[calc(100vh-4rem)] w-full shrink-0 md:sticky md:block">
-          <div className="h-full py-6 pr-6 lg:py-8">
-            <nav className="grid items-start gap-2">
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-3 rounded-lg bg-accent px-3 py-2 text-accent-foreground transition-all"
-              >
-                <Home className="h-5 w-5" />
-                <span className="text-sm font-medium">Dashboard</span>
-              </Link>
-              <Link
-                href="#"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-foreground"
-              >
-                <BarChart3 className="h-5 w-5" />
-                <span className="text-sm font-medium">Reports</span>
-              </Link>
-              <Link
-                href="#"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-foreground"
-              >
-                <Settings className="h-5 w-5" />
-                <span className="text-sm font-medium">Settings</span>
-              </Link>
-            </nav>
-          </div>
-        </aside>
+      <div className="flex flex-col items-center justify-center min-h-screen">
 
-        <main className="flex flex-col gap-6 pb-16">
+        <main className="max-w-3xl">
           <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
               <p className="text-muted-foreground">Track and manage your finances in one place.</p>
             </div>
-            <Button onClick={() => setTransactionType("expense")}>
+            {/* <Button onClick={() => setTransactionType("expense")}>
               <Plus className="mr-2 h-4 w-4" />
               Add Transaction
-            </Button>
+            </Button> */}
           </div>
+
+          {message && <p className="text-center text-sm text-red-500">{message}</p>}
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
@@ -84,38 +128,41 @@ export default function Dashboard() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$8,421.50</div>
-                <p className="text-xs text-muted-foreground">+5.1% from last month</p>
+                <div className="text-2xl font-bold">${totalBalance.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">Updated in real-time</p>
               </CardContent>
             </Card>
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Income</CardTitle>
                 <TrendingUp className="h-4 w-4 text-green-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$4,550.00</div>
-                <p className="text-xs text-muted-foreground">+12% from last month</p>
+                <div className="text-2xl font-bold">${income.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">Based on recent transactions</p>
               </CardContent>
             </Card>
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Expenses</CardTitle>
                 <TrendingDown className="h-4 w-4 text-red-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$2,345.00</div>
-                <p className="text-xs text-muted-foreground">-3% from last month</p>
+                <div className="text-2xl font-bold">${expenses.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">Spent this month</p>
               </CardContent>
             </Card>
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Investments</CardTitle>
                 <TrendingUp className="h-4 w-4 text-blue-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$6,216.50</div>
-                <p className="text-xs text-muted-foreground">+2.5% from last month</p>
+                <div className="text-2xl font-bold">${investments.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">Growth this month</p>
               </CardContent>
             </Card>
           </div>
@@ -123,128 +170,114 @@ export default function Dashboard() {
           <Tabs defaultValue="transactions" className="mt-6">
             <TabsList>
               <TabsTrigger value="transactions">Transactions</TabsTrigger>
-              <TabsTrigger value="add">Add Entry</TabsTrigger>
-              <TabsTrigger value="ai-advisor">AI Advisor</TabsTrigger>
+              <TabsTrigger value="analysis">Analysis</TabsTrigger>
+              <TabsTrigger value="investments">Investments</TabsTrigger>
+              <TabsTrigger value="NLP">Advice</TabsTrigger>
             </TabsList>
             <TabsContent value="transactions" className="space-y-4">
               <Card>
                 <CardHeader>
                   <CardTitle>Recent Transactions</CardTitle>
-                  <CardDescription>You have made 12 transactions this month.</CardDescription>
+                  <CardDescription>
+                    {transactions.length > 0 ? `You have ${transactions.length} transactions.` : "No transactions found."}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-8">
-                    {[
-                      {
-                        type: "expense",
-                        category: "Groceries",
-                        amount: 120.5,
-                        date: "2023-06-15",
-                        description: "Weekly grocery shopping",
-                      },
-                      {
-                        type: "income",
-                        category: "Salary",
-                        amount: 2500,
-                        date: "2023-06-10",
-                        description: "Monthly salary",
-                      },
-                      {
-                        type: "expense",
-                        category: "Entertainment",
-                        amount: 45.99,
-                        date: "2023-06-08",
-                        description: "Movie tickets",
-                      },
-                      {
-                        type: "investment",
-                        category: "Stocks",
-                        amount: 500,
-                        date: "2023-06-05",
-                        description: "AAPL shares purchase",
-                      },
-                      {
-                        type: "expense",
-                        category: "Utilities",
-                        amount: 85.4,
-                        date: "2023-06-01",
-                        description: "Electricity bill",
-                      },
-                    ].map((transaction, i) => (
-                      <div key={i} className="flex items-center">
-                        <div
-                          className={`mr-4 rounded-full p-2 ${
-                            transaction.type === "income"
-                              ? "bg-green-100 dark:bg-green-900"
-                              : transaction.type === "expense"
-                                ? "bg-red-100 dark:bg-red-900"
-                                : "bg-blue-100 dark:bg-blue-900"
-                          }`}
-                        >
-                          {transaction.type === "income" && <TrendingUp className="h-4 w-4 text-green-500" />}
-                          {transaction.type === "expense" && <TrendingDown className="h-4 w-4 text-red-500" />}
-                          {transaction.type === "investment" && (
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="h-4 w-4 text-blue-500"
-                            >
-                              <path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"></path>
-                              <line x1="2" y1="20" x2="2" y2="20"></line>
-                            </svg>
-                          )}
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium leading-none">{transaction.category}</p>
-                          <p className="text-sm text-muted-foreground">{transaction.description}</p>
-                        </div>
-                        <div className="ml-auto font-medium">
-                          {transaction.type === "income" && <span className="text-green-500">+</span>}
-                          {transaction.type === "expense" && <span className="text-red-500">-</span>}
-                          {transaction.type === "investment" && <span className="text-blue-500">→</span>}$
-                          {transaction.amount.toFixed(2)}
-                        </div>
-                      </div>
-                    ))}
+                {transactions.map((t) => (
+                  <div key={t.id} className="flex flex-col md:flex-row justify-between items-center border-b py-3">
+                    <div className="w-full md:w-1/3">
+                      <p className="font-medium">{t.name}</p>
+                      <p className="text-sm text-gray-500">{t.category || "Uncategorized"} • {t.payment_channel}</p>
+                    </div>
+                    
+                    <div className="hidden md:block text-gray-500 w-1/3 text-center">
+                      <p>{t.date}</p>
+                      <p className="text-sm">{t.account_name} • ****{t.mask}</p>
+                    </div>
+
+                    <div className={`w-full md:w-1/3 text-right font-semibold ${t.amount < 0 ? "text-red-500" : "text-green-500"}`}>
+                      ${Math.abs(t.amount).toFixed(2)}
+                    </div>
+                  </div>
+                ))}
+                </CardContent>
+              </Card>
+              <Button onClick={refreshTransactions}>Refresh Transactions</Button>
+            </TabsContent>
+            <TabsContent value="analysis">
+              <Card className="p-6 shadow-lg rounded-xl bg-white border">
+                <CardHeader className="text-center">
+                  <CardTitle className="text-xl font-bold">Financial Analysis</CardTitle>
+                  <CardDescription className="text-gray-500">
+                    Insights into your spending habits.
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm md:text-base">
+                    <div className="flex items-center gap-2 font-medium">
+                      <BarChart3 className="h-4 w-4 text-gray-600" />
+                      Top Spending Category:
+                    </div>
+                    <p className="text-right font-semibold text-red-500">{topSpendingCategory}</p>
+
+                    <div className="flex items-center gap-2 font-medium">
+                      <DollarSign className="h-4 w-4 text-gray-600" />
+                      Total Balance:
+                    </div>
+                    <p className="text-right font-semibold">${totalBalance.toFixed(2)}</p>
+
+                    <div className="flex items-center gap-2 font-medium">
+                      <LineChart className="h-4 w-4 text-gray-600" />
+                      Savings Rate:
+                    </div>
+                    <p className="text-right">{savingsRate}%</p>
+
+                    <div className="flex items-center gap-2 font-medium">
+                      <TrendingUp className="h-4 w-4 text-gray-600" />
+                      Income vs. Expenses Ratio:
+                    </div>
+                    <p className="text-right">{income > 0 ? `${(expenses / income * 100).toFixed(2)}%` : "N/A"}</p>
+
+                    <div className="flex items-center gap-2 font-medium">
+                      <TrendingDown className="h-4 w-4 text-gray-600" />
+                      Biggest Expense:
+                    </div>
+                    <p className="text-right font-semibold text-red-500">
+                      ${Math.abs(biggestExpense.amount).toFixed(2)} - {biggestExpense.name}
+                    </p>
+
+                    <div className="flex items-center gap-2 font-medium">
+                      <PiggyBank className="h-4 w-4 text-gray-600" />
+                      Total Investments:
+                    </div>
+                    <p className="text-right font-semibold text-blue-500">${investments.toFixed(2)}</p>
+
+                    <div className="flex items-center gap-2 font-medium">
+                      <LineChart className="h-4 w-4 text-gray-600" />
+                      Spending Trend:
+                    </div>
+                    <p className={`text-right font-semibold ${spendingTrend > 0 ? "text-red-500" : "text-green-500"}`}>
+                      {spendingTrend > 0 ? "↑ Up" : "↓ Down"} {Math.abs(spendingTrend).toFixed(2)}%
+                    </p>
+                  </div>
+
+                  <div className="mt-4">
+                    <p className="font-medium mb-2 flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4 text-gray-600" />
+                      Expenses Breakdown:
+                    </p>
+                    <ul className="list-disc list-inside text-sm text-gray-700">
+                      {Object.entries(categoryTotals).map(([category, amount]) => (
+                        <li key={category} className="flex justify-between">
+                          <span>{category}:</span>
+                          <span className="font-semibold">${amount.toFixed(2)}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
-            <TabsContent value="add" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Add Financial Entry</CardTitle>
-                  <CardDescription>Record a new transaction for your account.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Tabs defaultValue={transactionType} onValueChange={setTransactionType}>
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="expense">Expense</TabsTrigger>
-                      <TabsTrigger value="income">Income</TabsTrigger>
-                      <TabsTrigger value="investment">Investment</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="expense">
-                      <TransactionForm type="expense" />
-                    </TabsContent>
-                    <TabsContent value="income">
-                      <TransactionForm type="income" />
-                    </TabsContent>
-                    <TabsContent value="investment">
-                      <TransactionForm type="investment" />
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="ai-advisor" className="space-y-4">
-              <AIAdvisor />
             </TabsContent>
           </Tabs>
         </main>
@@ -252,4 +285,3 @@ export default function Dashboard() {
     </div>
   )
 }
-

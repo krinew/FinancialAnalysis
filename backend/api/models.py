@@ -56,6 +56,3 @@ class StockData(models.Model):
 
     def __str__(self):
         return f"{self.symbol} - {self.close_price} at {self.timestamp}"
-    
-
-
