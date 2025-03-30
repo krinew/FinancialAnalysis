@@ -8,4 +8,5 @@ urlpatterns = [
     path('create_sandbox_token/', create_sandbox_token, name='create_sandbox_token'),
     path('create-sandbox-token_view/', create_sandbox_token_view, name='create_sandbox_token'),
     path('fetch_transaction_view/', fetch_transaction_view, name='fetch_transactions'),
+    path('fetch-stock-data/', fetch_stock_data, name='fetch_stock_data'),
 ]

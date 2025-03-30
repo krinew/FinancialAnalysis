@@ -8,11 +8,13 @@ from plaid.model.accounts_get_request import AccountsGetRequest
 from plaid.model.transactions_get_request import TransactionsGetRequest
 from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
 from plaid.model.products import Products # <--- IMPORT ADDED
-import pathway as pw
-from .pathway_pipeline import run_pipeline
+#import pathway as pw
+#from .pathway_pipeline import run_pipeline
 from datetime import datetime, timedelta
+import requests
 
 access_token = "access-sandbox-d5d206b2-da0a-488c-845d-c27482e55dc9"  # Replace with actual sandbox token
+API_KEY="SKESZURX98N0ASAX"
 
 
 # List or Create Transactions
@@ -282,3 +284,54 @@ def create_sandbox_token_view(request):
     
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+    
+    
+
+def fetch_stock_data(request):
+    try:
+        # Get stock symbols from request parameters (comma-separated)
+        symbols = request.GET.get('symbols','AAPL,TSLA')
+        if not symbols:
+            return JsonResponse({"error": "Please provide at least one stock symbol using ?symbols=AAPL,TSLA"}, status=400)
+        
+        symbol_list = symbols.split(',')
+
+        results = {}
+
+        # Fetch data for each symbol
+        for symbol in symbol_list:
+            symbol = symbol.strip().upper()
+            url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&apikey={API_KEY}&outputsize=compact"
+            response = requests.get(url)
+            data = response.json()
+
+            # Handle errors for invalid symbols
+            if "Error Message" in data:
+                results[symbol] = {"error": data["Error Message"]}
+                continue
+
+            time_series = data.get("Time Series (Daily)", {})
+            if not time_series:
+                results[symbol] = {"error": "No data available for this symbol."}
+                continue
+
+            # Format data for JSON response
+            formatted_data = [
+                {
+                    "date": date,
+                    "open": float(values["1. open"]),
+                    "high": float(values["2. high"]),
+                    "low": float(values["3. low"]),
+                    "close": float(values["4. close"]),
+                    "volume": int(values["5. volume"])
+                }
+                for date, values in time_series.items()
+            ]
+
+            results[symbol] = formatted_data
+
+        return JsonResponse(results)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)

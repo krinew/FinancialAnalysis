@@ -1,5 +1,4 @@
 # Assuming this is in e.g., your_app/services.py or your_app/plaid_utils.py
-
 import plaid
 from plaid.api import plaid_api
 from plaid.model.transactions_get_request import TransactionsGetRequest
