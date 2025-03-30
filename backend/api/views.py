@@ -179,7 +179,7 @@ def fetch_transaction_view(request):
         ]
 
         # Send data to Pathway for real-time processing
-        run_pipeline(formatted_data)
+        # run_pipeline(formatted_data)
 
         return JsonResponse({"message": "Data sent to Pathway for processing."}, status=200)
 
@@ -234,8 +234,6 @@ def create_sandbox_token_view(request):
         return JsonResponse({'error': str(e)}, status=500)
     
     
-    
-
 def fetch_stock_data(request):
     try:
         # Get stock symbols from request parameters (comma-separated)

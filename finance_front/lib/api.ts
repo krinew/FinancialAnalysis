@@ -62,3 +62,25 @@ export async function createSandboxToken() {
         throw error;
     }
 }
+
+// Fetch stock data
+export async function fetchStockData(symbols: string = "AAPL,TSLA") {
+    try {
+        const response = await fetch(`${API_BASE_URL}/fetch-stock-data/?symbols=${encodeURIComponent(symbols)}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error: ${response.status} ${response.statusText}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error("Failed to fetch stock data:", error);
+        throw error;
+    }
+}
