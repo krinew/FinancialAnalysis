@@ -1,104 +1,91 @@
 
 
-MicroFinancer – Personal Finance Management App
+# MicroFinancer – Personal Finance Management App
 
-🪙 Overview
+## 🪙 Overview
 
-MicroFinancer is an all-in-one personal finance management application, designed to help users gain real-time insights into their financial habits, investments, and spending behavior. It also introduces MicroInvestor, a feature that helps users effortlessly invest small amounts (spare change) into investment opportunities.
+MicroFinancer is an all-in-one personal finance management application, designed to help users gain real-time insights into their financial habits, investments, and spending behavior. It also introduces **MicroInvestor**, a feature that helps users effortlessly invest small amounts (spare change) into investment opportunities.
 
-💡 Problem Statement
+---
+
+## 💡 Problem Statement
 
 Managing personal finances is a juggling act with data coming from various platforms. Users often:
 
-Lack real-time insights like spending trends, budget status, and breakdowns.
+- Lack real-time insights like spending trends, budget status, and breakdowns.
+- Want to explore investment opportunities but don't know where to start.
+- Hesitate to invest while spending impulsively.
 
-Want to explore investment opportunities but don't know where to start.
+---
 
-Hesitate to invest while spending impulsively.
+## 🚀 What MicroFinancer Offers
 
-🚀 What MicroFinancer Offers
+- Seamless integration of transaction data via APIs from banks, investment portfolios, and budget managers
+- Real-time, customizable insights using AI and natural language queries.
+- Automated analysis to discover potential investment opportunities.
+- A smart **MicroInvestment** system prompting users to invest spare change effortlessly.
 
-Seamless integration of transaction data via APIs from banks, investment portfolios, and budget managers
+---
 
-Real-time, customizable insights using AI and natural language queries.
+## 🛠️ Tech Stack
 
-Automated analysis to discover potential investment opportunities.
+### Backend
 
-A smart MicroInvestment system prompting users to invest spare change effortlessly.
+- **Django + Django REST Framework** – Robust and scalable backend.
+- **Pathway** – Real-time vector store for transaction analysis.
+- **Fetch AI** – AI agents for financial insights and recommendations.
+- **MySQL** – Database to store user data and transaction history.
 
-🛠️ Tech Stack
+### Frontend
 
-Backend
+- **React + Vite** – Lightweight and fast front-end framework.
+- **Recharts** – Interactive data visualization.
+- **Tailwind CSS** – Utility-first CSS framework for quick and clean UI.
 
-Django + Django REST Framework – Robust and scalable backend.
+---
 
-Pathway – Real-time vector store for transaction analysis.
+## ⚙️ Key Features
 
-Fetch AI – AI agents for financial insights and recommendations.
+- Real-time transaction analysis and visualization.
+- Natural language insights for spending and investment recommendations.
+- AI-powered financial guidance with dynamic vector search.
+- Micro-investment system suggesting high-probability small investment opportunities.
+- Interactive dashboards and charts for user-friendly experience.
 
-MySQL – Database to store user data and transaction history.
+---
 
-Frontend
+## 🟣 Workflow Plan
 
-React + Vite – Lightweight and fast front-end framework.
+### Backend Setup
 
-Recharts – Interactive data visualization.
+- Configure **Django REST Framework** with **MySQL**.
+- Integrate **Plaid/Yodlee** APIs to fetch transaction data.
+- Ingest transaction data into **Pathway** vector store.
+- Design database schema for users, transactions, and virtual accounts using Django ORM.
 
-Tailwind CSS – Utility-first CSS framework for quick and clean UI.
+### AI Integration
 
-⚙️ Key Features
+- Integrate market data APIs (e.g., Alpha Vantage, IEX Cloud).
+- Retrieved dummy data from SandBox API.
+- Implement **Fetch AI** for insights, natural language queries, and financial simulations (Digital Twin).
 
-Real-time transaction analysis and visualization.
+### Frontend Development & API Integration
 
-Natural language insights for spending and investment recommendations.
+- Build the React dashboard using **Tailwind CSS**.
+- Integrate \*\*jscharts \*\*for dynamic expense and investment charts.
+- Connect frontend to backend APIs.
 
-AI-powered financial guidance with dynamic vector search.
+### Testing & Optimization
 
-Micro-investment system suggesting high-probability small investment opportunities.
+- Optimize vector store and query performance.
+- Improve real-time updates and Digital Twin logic.
+- Final UI/UX refinement and user testing.
 
-Interactive dashboards and charts for user-friendly experience.
+---
 
-🟣 Workflow Plan
+## 👥 Team
 
-Backend Setup
-
-Configure Django REST Framework with MySQL.
-
-Integrate Plaid/Yodlee APIs to fetch transaction data.
-
-Ingest transaction data into Pathway vector store.
-
-Design database schema for users, transactions, and virtual accounts using Django ORM.
-
-AI Integration
-
-Integrate market data APIs (e.g., Alpha Vantage, IEX Cloud).
-
-Retrieved dummy data from SandBox API.
-
-Implement Fetch AI for insights, natural language queries, and financial simulations (Digital Twin).
-
-Frontend Development & API Integration
-
-Build the React dashboard using Tailwind CSS.
-
-Integrate **jscharts **for dynamic expense and investment charts.
-
-Connect frontend to backend APIs.
-
-Testing & Optimization
-
-Optimize vector store and query performance.
-
-Improve real-time updates and Digital Twin logic.
-
-Final UI/UX refinement and user testing.
-
-👥 Team
-
-Ansh Varma
-
-Devaj Rathore
-
-Parth Goyal
+- Ansh Varma
+- Devaj Rathore
+- Parth Goyal
 
