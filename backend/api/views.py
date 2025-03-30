@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from .models import *
 import json
-from .fetch_data import *
+from .fetch_data import *  
 from plaid.model.accounts_get_request import AccountsGetRequest
 from plaid.model.transactions_get_request import TransactionsGetRequest
 from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
@@ -45,19 +45,6 @@ def transaction_list(request):
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
 
-# # Fetch Stock Data using fetch_stock_data
-# @csrf_exempt
-# @login_required
-# def fetch_data(request):
-#     symbol = request.GET.get('symbol', 'AAPL')
-#     try:
-#         fetch_stock_data(symbol)
-#         return JsonResponse({'status': f'Data fetched successfully for {symbol}!'}, status=200)
-#     except Exception as e:
-#         return JsonResponse({'error': str(e)}, status=500)
-
-# Retrieve, Update or Delete a Transaction
-
 @login_required
 def transaction_detail(request, transaction_id):
     try:
@@ -93,7 +80,6 @@ def transaction_detail(request, transaction_id):
 @csrf_exempt
 def fetch_transaction_view(request):
     try:
-        # Provide a generic access_token (not tied to a specific user)
         result = fetch_and_store_transactions(access_token)
         return JsonResponse({"message": result})
     except Exception as e:
@@ -132,7 +118,6 @@ def create_sandbox_token(request):
     try:
         client = get_plaid_client()
 
-        # Step 1: Create a public token
         request_data = SandboxPublicTokenCreateRequest(
             institution_id="ins_109508",
             initial_products=[
@@ -144,7 +129,6 @@ def create_sandbox_token(request):
         response = client.sandbox_public_token_create(request_data)
         public_token = response.public_token
 
-        # Step 2: Exchange public token for access token
         exchange_request = ItemPublicTokenExchangeRequest(public_token=public_token)
         exchange_response = client.item_public_token_exchange(exchange_request)
 
@@ -155,25 +139,10 @@ def create_sandbox_token(request):
     
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-# @login_required
-# def fetch_accounts(request):
-#     try:
-#         item = Item.objects.filter(user=request.user).first()
-#         if not item:
-#             return JsonResponse({"error": "No item found for this user"}, status=404)
-
-#         client = get_plaid_client()
-#         request = AccountsGetRequest(access_token=item.access_token)
-#         response = client.accounts_get(request)
-#         return JsonResponse(response.to_dict(), safe=False)
-#     except Exception as e:
-#         return JsonResponse({"error": str(e)}, status=500)
     
 @csrf_exempt
 def fetch_transaction_view(request):
     try:
-        # Use hardcoded access token
-        
         client = get_plaid_client()
         end_date = datetime.now().date()
         start_date = end_date - timedelta(days=30)
@@ -189,29 +158,6 @@ def fetch_transaction_view(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
-    
-
-# @login_required
-# def fetch_transactions(request):
-#     try:
-#         item = Item.objects.filter(user=request.user).first()
-#         if not item:
-#             return JsonResponse({"error": "No item found for this user"}, status=404)
-
-#         client = get_plaid_client()
-
-#         start_date = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
-#         end_date = datetime.now().strftime('%Y-%m-%d')
-
-#         request_data = TransactionsGetRequest(
-#             access_token=item.access_token,
-#             start_date=start_date,
-#             end_date=end_date
-#         )
-#         response = client.transactions_get(request_data)
-#         return JsonResponse(response.to_dict(), safe=False)
-#     except Exception as e:
-#         return JsonResponse({"error": str(e)}, status=500)
 
 @csrf_exempt
 def fetch_accounts_without_user(request):

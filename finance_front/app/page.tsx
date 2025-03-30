@@ -38,7 +38,7 @@ export default function Home() {
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  <Link href="/auth?signup=true">
+                  <Link href="/dashboard">
                     <Button size="lg" className="w-full min-[400px]:w-auto">
                       Get Started
                       <ChevronRight className="ml-2 h-4 w-4" />
@@ -177,7 +177,7 @@ export default function Home() {
               </p>
             </div>
             <div className="mx-auto flex flex-col gap-2 min-[400px]:flex-row justify-center pt-4">
-              <Link href="/auth?signup=true">
+              <Link href="/dashboard">
                 <Button size="lg" className="w-full min-[400px]:w-auto">
                   Get Started
                 </Button>
@@ -197,4 +197,3 @@ export default function Home() {
     </div>
   )
 }
-
