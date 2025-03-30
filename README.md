@@ -1,90 +1,104 @@
-# Finance Management App - Backend
 
-## Overview
-This Django backend provides API endpoints for managing financial transactions, integrating with Plaid for bank account and transaction data, and offering a finance-based chatbot. The backend supports user authentication and interacts with Pathway for real-time financial analysis.
 
-## Features
-- **Transaction Management**: Create, list, update, and delete transactions.
-- **Plaid Integration**: Fetch bank account details and transactions.
-- **Finance Chatbot**: Provides financial insights based on user transactions.
-- **Sandbox Token Handling**: Generates sandbox access tokens for testing with Plaid.
-- **Pathway Integration**: Sends transaction data for real-time processing.
+MicroFinancer – Personal Finance Management App
 
-## Installation & Setup
-### Prerequisites
-Ensure you have the following installed:
-- Python 3.x
-- Django
-- Django REST Framework
-- Plaid SDK
-- Pathway SDK
+🪙 Overview
 
-### Installation Steps
-1. Clone the repository:
-   ```bash
-   git clone <repository_url>
-   cd <project_directory>
-   ```
-2. Create a virtual environment and activate it:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Set up environment variables (or use Django settings for API keys).
-5. Run migrations:
-   ```bash
-   python manage.py migrate
-   ```
-6. Start the development server:
-   ```bash
-   python manage.py runserver
-   ```
+MicroFinancer is an all-in-one personal finance management application, designed to help users gain real-time insights into their financial habits, investments, and spending behavior. It also introduces MicroInvestor, a feature that helps users effortlessly invest small amounts (spare change) into investment opportunities.
 
-## API Endpoints
-### 1. **Transaction Management**
-- **List Transactions** (GET): `/transactions/`
-- **Create Transaction** (POST): `/transactions/`
-- **Retrieve Transaction** (GET): `/transactions/<id>/`
-- **Update Transaction** (PUT): `/transactions/<id>/`
-- **Delete Transaction** (DELETE): `/transactions/<id>/`
+💡 Problem Statement
 
-### 2. **Plaid Integration**
-- **Exchange Token** (POST): `/exchange_token/`
-- **Create Sandbox Token** (POST): `/create_sandbox_token/`
-- **Fetch Transactions** (GET): `/fetch_transaction_view/`
-- **Fetch Accounts** (GET): `/fetch_accounts_without_user/`
+Managing personal finances is a juggling act with data coming from various platforms. Users often:
 
-### 3. **Finance Chatbot**
-- **Chatbot Interaction** (POST): `/chatbot/`
-  - Request Body:
-    ```json
-    {
-      "user_id": 1,
-      "message": "How can I save more money?"
-    }
-    ```
-  - Response:
-    ```json
-    {
-      "response": "Based on your expenses, consider reducing discretionary spending."
-    }
-    ```
+Lack real-time insights like spending trends, budget status, and breakdowns.
 
-## Dependencies
-- `Django`
-- `Django REST Framework`
-- `plaid`
-- `pathway`
-- `transformers` (for chatbot LLM API)
+Want to explore investment opportunities but don't know where to start.
 
-## Notes
-- Ensure you replace `access_token` and `client_id` with actual Plaid credentials.
-- The chatbot uses GPT-2 for text generation; consider switching to a more finance-specific model for better insights.
+Hesitate to invest while spending impulsively.
 
-## License
-This project is licensed under the MIT License.
+🚀 What MicroFinancer Offers
+
+Seamless integration of transaction data via APIs from banks, investment portfolios, and budget managers
+
+Real-time, customizable insights using AI and natural language queries.
+
+Automated analysis to discover potential investment opportunities.
+
+A smart MicroInvestment system prompting users to invest spare change effortlessly.
+
+🛠️ Tech Stack
+
+Backend
+
+Django + Django REST Framework – Robust and scalable backend.
+
+Pathway – Real-time vector store for transaction analysis.
+
+Fetch AI – AI agents for financial insights and recommendations.
+
+MySQL – Database to store user data and transaction history.
+
+Frontend
+
+React + Vite – Lightweight and fast front-end framework.
+
+Recharts – Interactive data visualization.
+
+Tailwind CSS – Utility-first CSS framework for quick and clean UI.
+
+⚙️ Key Features
+
+Real-time transaction analysis and visualization.
+
+Natural language insights for spending and investment recommendations.
+
+AI-powered financial guidance with dynamic vector search.
+
+Micro-investment system suggesting high-probability small investment opportunities.
+
+Interactive dashboards and charts for user-friendly experience.
+
+🟣 Workflow Plan
+
+Backend Setup
+
+Configure Django REST Framework with MySQL.
+
+Integrate Plaid/Yodlee APIs to fetch transaction data.
+
+Ingest transaction data into Pathway vector store.
+
+Design database schema for users, transactions, and virtual accounts using Django ORM.
+
+AI Integration
+
+Integrate market data APIs (e.g., Alpha Vantage, IEX Cloud).
+
+Retrieved dummy data from SandBox API.
+
+Implement Fetch AI for insights, natural language queries, and financial simulations (Digital Twin).
+
+Frontend Development & API Integration
+
+Build the React dashboard using Tailwind CSS.
+
+Integrate **jscharts **for dynamic expense and investment charts.
+
+Connect frontend to backend APIs.
+
+Testing & Optimization
+
+Optimize vector store and query performance.
+
+Improve real-time updates and Digital Twin logic.
+
+Final UI/UX refinement and user testing.
+
+👥 Team
+
+Ansh Varma
+
+Devaj Rathore
+
+Parth Goyal
 
