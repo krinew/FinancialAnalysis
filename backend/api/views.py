@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
-from models import *
+from .models import *
 import json
 from .fetch_data import *
 
@@ -11,8 +11,7 @@ from .fetch_data import *
 @login_required
 def transaction_list(request):
     if request.method == 'GET':
-        transactions = Transaction.objects.filter
-        (user=request.user).values()
+        transactions = Transaction.objects.filter(user=request.user).values()
         return JsonResponse(list(transactions), safe=False)
     
     elif request.method == 'POST':

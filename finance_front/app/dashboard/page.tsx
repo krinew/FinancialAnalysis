@@ -1,21 +1,143 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LogOut, PiggyBank, Plus, DollarSign, TrendingDown, TrendingUp, Home, BarChart3, Settings } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
+import {
+  LogOut,
+  PiggyBank,
+  Plus,
+  DollarSign,
+  TrendingDown,
+  TrendingUp,
+  Home,
+  BarChart3,
+  Settings
+} from "lucide-react"
+
+// Import API functions
+import {
+  getTransactions,
+  createTransaction,
+  getTransaction,
+  updateTransaction,
+  deleteTransaction,
+  fetchStockData,
+  storeStockData,
+  fetchTransactionView
+} from "../../lib/api"
+
 import TransactionForm from "@/components/transaction-form"
 import AIAdvisor from "@/components/ai-advisor"
 
 export default function Dashboard() {
   const router = useRouter()
   const [transactionType, setTransactionType] = useState("expense")
+  const [transactions, setTransactions] = useState<any[]>([])
+  const [message, setMessage] = useState<string>("")
+
+  // Fetch transactions on mount
+  useEffect(() => {
+    refreshTransactions()
+  }, [])
+
+  const refreshTransactions = async () => {
+    try {
+      const data = await getTransactions()
+      setTransactions(data)
+    } catch (error: any) {
+      setMessage("Error fetching transactions: " + error.message)
+    }
+  }
+
+  // Example: Create a dummy transaction
+  const handleCreateTransaction = async () => {
+    try {
+      const dummyData = {
+        amount: 100,
+        category: "Test Category",
+        description: "Created via Dashboard API demo"
+      }
+      const response = await createTransaction(dummyData)
+      setMessage(response.message)
+      refreshTransactions()
+    } catch (error: any) {
+      setMessage("Error creating transaction: " + error.message)
+    }
+  }
+
+  // Example: Update the first transaction in the list
+  const handleUpdateTransaction = async () => {
+    if (transactions.length === 0) {
+      setMessage("No transactions available to update.")
+      return
+    }
+    try {
+      const firstTransaction = transactions[0]
+      const updateData = { description: "Updated description" }
+      const response = await updateTransaction(firstTransaction.id, updateData)
+      setMessage(response.message)
+      refreshTransactions()
+    } catch (error: any) {
+      setMessage("Error updating transaction: " + error.message)
+    }
+  }
+
+  // Example: Delete the first transaction in the list
+  const handleDeleteTransaction = async () => {
+    if (transactions.length === 0) {
+      setMessage("No transactions available to delete.")
+      return
+    }
+    try {
+      const firstTransaction = transactions[0]
+      const response = await deleteTransaction(firstTransaction.id)
+      setMessage(response.message)
+      refreshTransactions()
+    } catch (error: any) {
+      setMessage("Error deleting transaction: " + error.message)
+    }
+  }
+
+  // Example: Fetch stock data (e.g., for AAPL)
+  const handleFetchStockData = async () => {
+    try {
+      const data = await fetchStockData()
+      setMessage("Stock Data: " + data.status)
+    } catch (error: any) {
+      setMessage("Error fetching stock data: " + error.message)
+    }
+  }
+
+  // Example: Store dummy stock data
+  const handleStoreStockData = async () => {
+    try {
+      // Dummy values for the example
+      const symbol = "AAPL"
+      const timestamp = new Date().toISOString()
+      const closePrice = 150.25
+      await storeStockData(symbol, timestamp, closePrice)
+      setMessage("Stock data stored successfully!")
+    } catch (error: any) {
+      setMessage("Error storing stock data: " + error.message)
+    }
+  }
+
+  // Example: Fetch transaction view from external service
+  const handleFetchTransactionView = async () => {
+    try {
+      const data = await fetchTransactionView()
+      setMessage("Transaction View: " + data.message)
+    } catch (error: any) {
+      setMessage("Error fetching transaction view: " + error.message)
+    }
+  }
 
   const handleLogout = () => {
-    // Handle logout logic
+    // Handle logout logic here
     router.push("/")
   }
 
@@ -77,6 +199,8 @@ export default function Dashboard() {
             </Button>
           </div>
 
+          {message && <p className="text-center text-sm text-red-500">{message}</p>}
+
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -125,97 +249,35 @@ export default function Dashboard() {
               <TabsTrigger value="transactions">Transactions</TabsTrigger>
               <TabsTrigger value="add">Add Entry</TabsTrigger>
               <TabsTrigger value="ai-advisor">AI Advisor</TabsTrigger>
+              <TabsTrigger value="api-demo">API Demo</TabsTrigger>
             </TabsList>
             <TabsContent value="transactions" className="space-y-4">
               <Card>
                 <CardHeader>
                   <CardTitle>Recent Transactions</CardTitle>
-                  <CardDescription>You have made 12 transactions this month.</CardDescription>
+                  <CardDescription>
+                    {transactions.length > 0
+                      ? `You have ${transactions.length} transactions.`
+                      : "No transactions found."}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-8">
-                    {[
-                      {
-                        type: "expense",
-                        category: "Groceries",
-                        amount: 120.5,
-                        date: "2023-06-15",
-                        description: "Weekly grocery shopping",
-                      },
-                      {
-                        type: "income",
-                        category: "Salary",
-                        amount: 2500,
-                        date: "2023-06-10",
-                        description: "Monthly salary",
-                      },
-                      {
-                        type: "expense",
-                        category: "Entertainment",
-                        amount: 45.99,
-                        date: "2023-06-08",
-                        description: "Movie tickets",
-                      },
-                      {
-                        type: "investment",
-                        category: "Stocks",
-                        amount: 500,
-                        date: "2023-06-05",
-                        description: "AAPL shares purchase",
-                      },
-                      {
-                        type: "expense",
-                        category: "Utilities",
-                        amount: 85.4,
-                        date: "2023-06-01",
-                        description: "Electricity bill",
-                      },
-                    ].map((transaction, i) => (
+                    {transactions.map((transaction, i) => (
                       <div key={i} className="flex items-center">
-                        <div
-                          className={`mr-4 rounded-full p-2 ${
-                            transaction.type === "income"
-                              ? "bg-green-100 dark:bg-green-900"
-                              : transaction.type === "expense"
-                                ? "bg-red-100 dark:bg-red-900"
-                                : "bg-blue-100 dark:bg-blue-900"
-                          }`}
-                        >
-                          {transaction.type === "income" && <TrendingUp className="h-4 w-4 text-green-500" />}
-                          {transaction.type === "expense" && <TrendingDown className="h-4 w-4 text-red-500" />}
-                          {transaction.type === "investment" && (
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="h-4 w-4 text-blue-500"
-                            >
-                              <path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"></path>
-                              <line x1="2" y1="20" x2="2" y2="20"></line>
-                            </svg>
-                          )}
-                        </div>
                         <div className="space-y-1">
                           <p className="text-sm font-medium leading-none">{transaction.category}</p>
                           <p className="text-sm text-muted-foreground">{transaction.description}</p>
                         </div>
                         <div className="ml-auto font-medium">
-                          {transaction.type === "income" && <span className="text-green-500">+</span>}
-                          {transaction.type === "expense" && <span className="text-red-500">-</span>}
-                          {transaction.type === "investment" && <span className="text-blue-500">→</span>}$
-                          {transaction.amount.toFixed(2)}
+                          ${parseFloat(transaction.amount).toFixed(2)}
                         </div>
                       </div>
                     ))}
                   </div>
                 </CardContent>
               </Card>
+              <Button onClick={refreshTransactions}>Refresh Transactions</Button>
             </TabsContent>
             <TabsContent value="add" className="space-y-4">
               <Card>
@@ -242,9 +304,21 @@ export default function Dashboard() {
                   </Tabs>
                 </CardContent>
               </Card>
+              <div className="flex gap-4">
+                <Button onClick={handleCreateTransaction}>Create Dummy Transaction</Button>
+                <Button onClick={handleUpdateTransaction}>Update First Transaction</Button>
+                <Button onClick={handleDeleteTransaction}>Delete First Transaction</Button>
+              </div>
             </TabsContent>
             <TabsContent value="ai-advisor" className="space-y-4">
               <AIAdvisor />
+            </TabsContent>
+            <TabsContent value="api-demo" className="space-y-4">
+              <div className="flex flex-col gap-4">
+                <Button onClick={handleFetchStockData}>Fetch Stock Data</Button>
+                <Button onClick={handleStoreStockData}>Store Stock Data</Button>
+                <Button onClick={handleFetchTransactionView}>Fetch Transaction View</Button>
+              </div>
             </TabsContent>
           </Tabs>
         </main>
@@ -252,4 +326,3 @@ export default function Dashboard() {
     </div>
   )
 }
-
