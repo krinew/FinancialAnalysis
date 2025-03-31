@@ -13,7 +13,7 @@ from plaid.model.products import Products # <--- IMPORT ADDED
 from datetime import datetime, timedelta
 import requests
 
-access_token = "access-sandbox-d5d206b2-da0a-488c-845d-c27482e55dc9"  # Replace with actual sandbox token
+access_token = "access-sandbox-699cec58-11f0-462c-b0dc-c76dfdfdd7d0"  # Replace with actual sandbox token
 API_KEY="SKESZURX98N0ASAX"
 
 
@@ -80,14 +80,28 @@ def transaction_detail(request, transaction_id):
         return JsonResponse({"message": "Transaction deleted successfully"})
 
 
-@csrf_exempt
 def fetch_transaction_view(request):
-    try:
-        result = fetch_and_store_transactions(access_token)
-        return JsonResponse({"message": result})
+    try: # Replace with your actual sandbox token
+        client = get_plaid_client()
+
+        end_date = datetime.now().date()
+        start_date = end_date - timedelta(days=30)
+
+        # Request transactions from Plaid
+        request_data = TransactionsGetRequest(
+            access_token=access_token,
+            start_date=start_date,
+            end_date=end_date
+        )
+       
+        response = client.transactions_get(request_data)
+
+        # Return the raw Plaid API response as JSON
+        return JsonResponse(response.to_dict(), safe=False, status=200)
+
     except Exception as e:
+        logger.error(f"Error in fetch_transaction_view: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
-    
     
 @csrf_exempt
 def exchange_token(request):
@@ -143,7 +157,6 @@ def create_sandbox_token(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
     
-@csrf_exempt
 def fetch_transaction_view(request):
     try:
         client = get_plaid_client()
@@ -152,36 +165,14 @@ def fetch_transaction_view(request):
 
         # Request transactions from Plaid
         request_data = TransactionsGetRequest(
-            access_token="your_access_token",  # Replace with actual token
+            access_token=access_token,  # Replace with actual token
             start_date=start_date,
             end_date=end_date
         )
-       
+
         response = client.transactions_get(request_data)
-        transaction_data = response.to_dict().get('transactions', [])
 
-        # Validate data
-        if not transaction_data:
-            return JsonResponse({"error": "No transactions found."}, status=404)
-
-        # Transform data to match Pathway schema
-        formatted_data = [
-            {
-                "transaction_id": txn.get("transaction_id"),
-                "user_id": txn.get("account_id"),  # Assuming account_id represents the user
-                "amount": txn.get("amount"),
-                "category": txn.get("category", ["Unknown"])[0],
-                "description": txn.get("name"),
-                "timestamp": txn.get("date"),
-                "pending": txn.get("pending", False),
-            }
-            for txn in transaction_data
-        ]
-
-        # Send data to Pathway for real-time processing
-        # run_pipeline(formatted_data)
-
-        return JsonResponse({"message": "Data sent to Pathway for processing."}, status=200)
+        return JsonResponse(response.to_dict(), status=200)
 
     except Exception as e:
         logger.error(f"Error in fetch_transaction_view: {str(e)}")
@@ -190,7 +181,7 @@ def fetch_transaction_view(request):
 @csrf_exempt
 def fetch_accounts_without_user(request):
     try:
-        access_token = "sandbox-access-token"  # Hardcoded for testing
+        access_token = access_token
         request_data = AccountsGetRequest(access_token=access_token)
         response = client.accounts_get(request_data)
         return JsonResponse(response.to_dict(), safe=False)

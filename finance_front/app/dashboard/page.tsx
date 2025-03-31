@@ -17,10 +17,26 @@ import {
 } from "lucide-react"
 
 // Import API functions
-import { fetchTransactions } from "../../lib/api"
+import { fetchTransactions, fetchStockData } from "../../lib/api"
 
 import TransactionForm from "@/components/transaction-form"
 import AIAdvisor from "@/components/ai-advisor"
+
+// const [loadingStocks, setLoadingStocks] = useState(false)
+// const [stockError, setStockError] = useState<string>("")
+// const [stocks, setStocks] = useState<any[]>([])
+
+// const loadStockData = async () => {
+//   setLoadingStocks(true)
+//   setStockError("")
+//   try {
+//     const data = await fetchStockData()
+//     setStocks(data.stocks) // Assuming your API returns { stocks: [...] }
+//   } catch (error: any) {
+//     setStockError("Error fetching stock data: " + error.message)
+//   }
+//   setLoadingStocks(false)
+// }
 
 export default function Dashboard() {
   const router = useRouter()
@@ -161,7 +177,7 @@ const spendingTrend = lastTotal > 0 ? ((currentTotal - lastTotal) / lastTotal) *
                 <TrendingUp className="h-4 w-4 text-blue-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${investments.toFixed(2)}</div>
+                <div className="text-2xl font-bold">$47.3</div>
                 <p className="text-xs text-muted-foreground">Growth this month</p>
               </CardContent>
             </Card>
@@ -279,6 +295,35 @@ const spendingTrend = lastTotal > 0 ? ((currentTotal - lastTotal) / lastTotal) *
                 </CardContent>
               </Card>
             </TabsContent>
+            {/* <TabsTrigger value="stocks" onClick={loadStockData}>Stocks</TabsTrigger> */}
+{/* <TabsContent value="stocks">
+  <Card>
+    <CardHeader>
+      <CardTitle>Stock Market Overview</CardTitle>
+      <CardDescription>
+        Track stock prices and trends.
+      </CardDescription>
+    </CardHeader>
+    <CardContent>
+      {loadingStocks && <p>Loading stocks...</p>}
+      {stockError && <p className="text-red-500">{stockError}</p>}
+      {stocks.length > 0 ? (
+        <div className="grid gap-4">
+          {stocks.map((stock) => (
+            <div key={stock.symbol} className="flex justify-between border-b py-2">
+              <div className="font-semibold">{stock.symbol}</div>
+              <div className={`font-medium ${stock.change >= 0 ? "text-green-500" : "text-red-500"}`}>
+                ${stock.price.toFixed(2)} ({stock.change.toFixed(2)}%)
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p>No stock data available.</p>
+      )}
+    </CardContent>
+  </Card>
+</TabsContent> */}
           </Tabs>
         </main>
       </div>
